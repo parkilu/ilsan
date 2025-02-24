@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>열차번호 및 편성정보 조회</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      position: relative;
+      width: 90%;
+      max-width: 600px;
+      margin: 20px auto;
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    /* 제목 폰트 크기 축소 */
+    h1 {
+      text-align: center;
+      margin: 10px 0;
+      font-size: 1.5rem;
+    }
+    h2 {
+      font-size: 1.2rem;
+      margin: 0;
+    }
+    /* 시간표 결과 제목 영역: 좌측 제목과 우측 빨간 글씨 영역 */
+    .timetable-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .timetable-notice {
+      color: red;
+      font-size: 0.8rem;
+      text-align: right;
+      line-height: 1.2;
+    }
+    /* 편성정보 결과 제목 영역: 좌측 제목과 우측 빨간 안내 문구 */
+    .traininfo-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .traininfo-notice {
+      color: red;
+      font-size: 0.8rem;
+      text-align: right;
+      line-height: 1.2;
+    }
+    /* 날짜 입력: 전체 너비 */
+    .full-width {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    /* 입력폼 영역: 두 컬럼(왼쪽: 시간표 조회, 오른쪽: 편성정보 조회) */
+    .row {
+      display: flex;
+      align-items: stretch;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    /* 수직 구분선 */
+    .divider {
+      width: 1px;
+      background-color: black;
+    }
+    label {
+      font-weight: bold;
+    }
+    input, select, button {
+      padding: 8px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      background: #007aff;
+      color: #fff;
+    }
+    /* 시간표 결과 영역: 스크롤 컨테이너 (높이를 400px로 조정) */
+    .iframe-container-timetable {
+      width: 100%;
+      height: 400px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      overflow-y: auto;
+      position: relative;
+    }
+    .iframe-container-timetable iframe {
+      width: 100%;
+      height: 1200px; /* 고정된 내부 컨텐츠 높이 */
+      border: none;
+    }
+    /* 편성정보 결과 영역 (제공된 스타일 참조) */
+    .result-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    .result-table td {
+      padding: 0;
+      border: 1px solid #ddd;
+    }
+    .result-container {
+      width: 100%;
+      height: 300px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid #ccc;
+    }
+    .result-iframe {
+      border: none;
+      position: absolute;
+      width: 1200px;
+      height: 1200px;
+      left: 0;
+      top: 0;
+    }
+    /* 우측 상단에 제작자 정보 배치 */
+    .footer {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 0.9rem;
+      color: #555;
+    }
+  </style>
+  <script>
+    // 노선별 역 목록 데이터
+    const stationsData = {
+      "Seoul_Line_3": [
+        { name: "삼송", value: "7IK87Iah" },
+        { name: "원흥", value: "7JuQ7Z2l" },
+        { name: "원당", value: "7JuQ64u5" },
+        { name: "화정", value: "7ZmU7KCV" },
+        { name: "대곡(일)", value: "64yA6rOh" },
+        { name: "백석", value: "67Cx7ISd" },
+        { name: "마두", value: "66eI65GQ" },
+        { name: "정발산", value: "7KCV67Cc7IKw" },
+        { name: "주엽", value: "7KO87Je9" },
+        { name: "대화", value: "64yA7ZmU" }
+      ],
+      "korail": [
+        { name: "대곡(경)", value: "64yA6rOh" },
+        { name: "대곡(서)", value: "64yA6rOh" },
+        { name: "곡산", value: "6rOh7IKw" },
+        { name: "백마", value: "67Cx66eI" },
+        { name: "풍산", value: "7ZKN7IKw" },
+        { name: "일산", value: "7J287IKw" },
+        { name: "탄현", value: "7YOE7ZiE" },
+        { name: "야당", value: "7JW864u5" },
+        { name: "운정", value: "7Jq07KCV" },
+        { name: "금릉", value: "6riI66aJ" },
+        { name: "금촌", value: "6riI7LSM" },
+        { name: "월롱", value: "7JuU66Gx" },
+        { name: "파주", value: "7YyM7KO8" },
+        { name: "문산", value: "66y47IKw" },
+        { name: "운천", value: "7Jq07LKc" },
+        { name: "임진강", value: "7J6E7KeE6rCV" }
+      ]
+    };
+
+    // 노선 선택 변경 시 역 목록 갱신 (노선선택 아래에 역명 선택)
+    function populateStations() {
+      const lineSelect = document.getElementById('line');
+      const stationSelect = document.getElementById('station');
+      const selectedLine = lineSelect.value;
+      const stations = stationsData[selectedLine] || [];
+      stationSelect.innerHTML = "";
+      stations.forEach((station, idx) => {
+        const opt = document.createElement('option');
+        opt.value = station.value + "|" + selectedLine;
+        opt.textContent = station.name;
+        if(idx === 0) opt.selected = true;
+        stationSelect.appendChild(opt);
+      });
+    }
+
+    // 시간표 조회: rail.blue URL 구성 및 iframe 로드
+    function loadTimetable() {
+      const dateInput = document.getElementById('date').value;
+      const stationValue = document.getElementById('station').value;
+      if (!dateInput || !stationValue) {
+        alert("날짜와 역 정보를 선택해주세요.");
+        return;
+      }
+      const [q, c] = stationValue.split('|');
+      const dateStr = dateInput.replace(/-/g, '');
+      const url = `https://rail.blue/railroad/logis/metrotimetable.aspx?q=${q}&c=${c}&date=${dateStr}&skip=1&hz=0&sec=0&option=448&base=1#!`;
+      const timetableFrame = document.getElementById('timetableFrame');
+      timetableFrame.src = url;
+    }
+
+    // 시간표 iframe 로드 후 스크롤 컨테이너를 상단 30% 위치로 이동
+    function scrollTimetableTo30Percent() {
+      const container = document.getElementById('iframeContainerTimetable');
+      container.scrollTop = (container.scrollHeight - container.clientHeight) * 0.3;
+    }
+
+    // 편성정보 조회: Tabriz URL 구성 및 iframe 로드 후 해당 영역으로 스크롤
+    function loadTrainInfo() {
+      const date = document.getElementById("date").value;
+      const company = document.getElementById("company").value;
+      const trainNum = document.getElementById("trainNumber").value.trim();
+      if (!date || !trainNum) {
+        alert("날짜와 열차번호를 입력해주세요.");
+        return;
+      }
+      if (!/^\d{4}$/.test(trainNum)) {
+        alert("열차번호는 4자리 숫자여야 합니다.");
+        return;
+      }
+      // 회사 코드에 따른 열차번호 파라미터 구성
+      var trainNumberParam = (company === "S") ? trainNum : (company + trainNum);
+      var url = "https://tabriz.kr/tripinfo/?company=" + company +
+                "&date=" + date +
+                "&trainNumber=" + trainNumberParam;
+      var resultIframe = document.getElementById("resultIframe");
+      resultIframe.src = url;
+      // 편성정보 iframe 고정 크기(1200px)를 기준으로 27% offset 적용
+      var iframeHeight = 1200;
+      var verticalOffset = iframeHeight * 0.27; // 약 324px
+      resultIframe.style.top = "-" + verticalOffset + "px";
+      resultIframe.style.left = "0px";
+      
+      // 편성정보 결과 영역으로 부드럽게 스크롤 이동
+      document.getElementById('resultContainer').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // 페이지 초기 로드 시 기본 역 목록 설정 및 기본 시간표 로드, 그리고 열차번호 엔터키 이벤트 등록
+    window.onload = function() {
+      populateStations();
+      loadTimetable();
+      document.getElementById("timetableFrame").addEventListener("load", scrollTimetableTo30Percent);
+      document.getElementById("trainNumber").addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          loadTrainInfo();
+        }
+      });
+    };
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div class="footer">일산건축사업소 박일우</div>
+    <h1>열차번호 및 편성정보 조회</h1>
+    <!-- 날짜 입력 (전체 너비) -->
+    <div class="full-width">
+      <label for="date">날짜:</label>
+      <input type="date" id="date" value="2025-02-24" required>
+    </div>
+    <!-- 입력폼: 좌측은 시간표, 우측은 편성정보 -->
+    <div class="row">
+      <!-- 좌측: 노선 선택과 역명 선택 -->
+      <div class="column">
+        <label for="line">노선 선택:</label>
+        <select id="line" onchange="populateStations()">
+          <option value="Seoul_Line_3">일산선</option>
+          <option value="korail">경의선</option>
+        </select>
+        <label for="station">역명 선택:</label>
+        <select id="station">
+          <!-- populateStations()에서 채워짐 -->
+        </select>
+        <button type="button" onclick="loadTimetable()">시간표 조회</button>
+      </div>
+      <!-- 중앙 수직 구분선 -->
+      <div class="divider"></div>
+      <!-- 우측: 회사 코드와 열차번호 입력 -->
+      <div class="column">
+        <label for="company">회사 코드:</label>
+        <select id="company" required>
+          <option value="S">S</option>
+          <option value="K">K</option>
+        </select>
+        <label for="trainNumber">열차번호 (4자리):</label>
+        <input type="text" id="trainNumber" pattern="\d{4}" maxlength="4" placeholder="예: 3393" required>
+        <button type="button" onclick="loadTrainInfo()">편성정보 조회</button>
+      </div>
+    </div>
+    <!-- 시간표 결과 제목 및 안내 문구 -->
+    <div class="timetable-title">
+      <h2>시간표 결과</h2>
+      <div class="timetable-notice">
+        열차번호 클릭하여 지연시간 확인<br>
+        지연시간 추가하여 로그시간과 비교
+      </div>
+    </div>
+    <!-- 시간표 결과 영역 -->
+    <div class="iframe-container-timetable" id="iframeContainerTimetable">
+      <iframe id="timetableFrame"></iframe>
+    </div>
+    <!-- 편성정보 결과 제목 및 안내 문구 -->
+    <div class="traininfo-title">
+      <h2>편성정보 결과</h2>
+      <div class="traininfo-notice">
+        5초 정도 후 편성정보 출력
+      </div>
+    </div>
+    <!-- 편성정보 결과 영역 (제공된 테이블 스타일) -->
+    <table class="result-table">
+      <tr>
+        <td>
+          <div class="result-container" id="resultContainer">
+            <iframe id="resultIframe" class="result-iframe"></iframe>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>
