@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
+  <!-- 손가락 확대/축소 금지 -->
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>열차번호 및 편성정보 조회</title>
   <style>
@@ -23,7 +24,7 @@
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    /* 제작자 정보 (우측 상단) */
+    /* 제작자 정보 */
     .footer {
       position: absolute;
       top: 15px;
@@ -53,7 +54,7 @@
     .date-input {
       flex: 1;
     }
-    .date-input label, 
+    .date-input label,
     .date-input input {
       display: block;
       width: 100%;
@@ -81,7 +82,28 @@
       line-height: 1.4;
       padding-left: 10px;
     }
-    /* 입력폼 영역: 두 영역을 항상 좌우로 배치 (반응형) */
+    /* 버튼 그룹 (노선, 회사코드) */
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+    .group-btn {
+      flex: 1;
+      padding: 8px;
+      font-size: 0.95rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #fff;
+      color: #333;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .group-btn.active {
+      background: #007aff;
+      color: #fff;
+      border-color: #007aff;
+    }
+    /* 입력폼 영역: 두 영역을 좌우로 배치 */
     .row {
       display: flex;
       flex-wrap: nowrap;
@@ -106,6 +128,7 @@
       margin-bottom: 4px;
       color: #555;
     }
+    /* input, select, button 공통 스타일 */
     input, select, button {
       padding: 8px 10px;
       font-size: 0.95rem;
@@ -127,6 +150,10 @@
     }
     button:hover {
       background: #005bb5;
+    }
+    /* 선택박스 높이 조정: 열차번호 입력과 동일하게 */
+    #station, #trainNumber {
+      height: 38px;
     }
     /* 결과 제목 영역 */
     .timetable-title, .traininfo-title {
@@ -164,7 +191,7 @@
     }
     .iframe-container-timetable iframe {
       width: 100%;
-      height: 1200px; /* 고정된 내부 컨텐츠 높이 */
+      height: 1200px;
       border: none;
     }
     /* 편성정보 결과 영역 */
@@ -214,12 +241,27 @@
     }
   </style>
   <script>
-    // 소스보기를 막기 위한 스크립트 (완벽하지 않음)
+    let selectedCompany = "S";
+    let selectedLine = "Seoul_Line_3"; // 기본값
+
+    function setCompany(code) {
+      selectedCompany = code;
+      document.getElementById("companyS").classList.toggle("active", code === "S");
+      document.getElementById("companyK").classList.toggle("active", code === "K");
+    }
+
+    function setLine(lineCode) {
+      selectedLine = lineCode;
+      document.getElementById("lineSeoul").classList.toggle("active", lineCode === "Seoul_Line_3");
+      document.getElementById("lineKorail").classList.toggle("active", lineCode === "korail");
+      populateStations();
+    }
+
+    // 소스보기를 막는 스크립트
     document.addEventListener('contextmenu', function(e) {
       e.preventDefault();
     });
     document.onkeydown = function(e) {
-      // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
       if (e.keyCode === 123 || 
          (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) ||
          (e.ctrlKey && e.keyCode === 85)) {
@@ -228,7 +270,6 @@
       }
     };
 
-    // 노선별 역 목록 데이터
     const stationsData = {
       "Seoul_Line_3": [
         { name: "삼송", value: "7IK87Iah" },
@@ -263,9 +304,7 @@
     };
 
     function populateStations() {
-      const lineSelect = document.getElementById('line');
       const stationSelect = document.getElementById('station');
-      const selectedLine = lineSelect.value;
       const stations = stationsData[selectedLine] || [];
       stationSelect.innerHTML = "";
       stations.forEach((station, idx) => {
@@ -297,7 +336,6 @@
 
     function loadTrainInfo() {
       const date = document.getElementById("date").value;
-      const company = document.getElementById("company").value;
       const trainNum = document.getElementById("trainNumber").value.trim();
       if (!date || !trainNum) {
         alert("날짜와 열차번호를 입력해주세요.");
@@ -307,8 +345,8 @@
         alert("열차번호는 4자리 숫자여야 합니다.");
         return;
       }
-      var trainNumberParam = (company === "S") ? trainNum : (company + trainNum);
-      var url = "https://tabriz.kr/tripinfo/?company=" + company +
+      var trainNumberParam = (selectedCompany === "S") ? trainNum : (selectedCompany + trainNum);
+      var url = "https://tabriz.kr/tripinfo/?company=" + selectedCompany +
                 "&date=" + date +
                 "&trainNumber=" + trainNumberParam;
       var resultIframe = document.getElementById("resultIframe");
@@ -318,10 +356,8 @@
       resultIframe.style.top = "-" + verticalOffset + "px";
       resultIframe.style.left = "0px";
       
-      // 편성정보 결과 영역으로 부드럽게 스크롤 이동
       document.getElementById('resultContainer').scrollIntoView({ behavior: 'smooth' });
       
-      // 편성정보 결과 제목 오른쪽의 "로딩중" 문구와 기차 이모티콘을 5초 후 제거
       const traininfoNotice = document.getElementById("traininfoNotice");
       traininfoNotice.innerHTML = `<span class="train-icon">🚆</span>로딩중`;
       setTimeout(() => {
@@ -329,9 +365,15 @@
       }, 5000);
     }
 
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     window.onload = function() {
+      setLine("Seoul_Line_3");
       populateStations();
       loadTimetable();
+      setCompany("S");
       document.getElementById("timetableFrame").addEventListener("load", scrollTimetableTo30Percent);
       document.getElementById("trainNumber").addEventListener("keydown", function(e) {
         if (e.key === "Enter") {
@@ -340,12 +382,28 @@
         }
       });
     };
-
-    // 최상단으로 이동하는 버튼 클릭 이벤트
-    function scrollToTop() {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
   </script>
+  <style>
+    /* 최상단 이동 버튼 스타일 */
+    .scroll-to-top {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      width: 50px;
+      height: 50px;
+      background: #007aff;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -366,30 +424,30 @@
     <!-- 입력폼 영역 -->
     <div class="row">
       <div class="column">
-        <label for="line">노선 선택:</label>
-        <select id="line" onchange="populateStations()">
-          <option value="Seoul_Line_3">일산선</option>
-          <option value="korail">경의선</option>
-        </select>
+        <label>노선 선택:</label>
+        <!-- 노선 선택 버튼 그룹 -->
+        <div class="button-group">
+          <button type="button" class="group-btn" id="lineSeoul" onclick="setLine('Seoul_Line_3')">일산선</button>
+          <button type="button" class="group-btn" id="lineKorail" onclick="setLine('korail')">경의선</button>
+        </div>
         <label for="station">역명 선택:</label>
-        <select id="station">
-          <!-- populateStations()에서 채워짐 -->
-        </select>
+        <select id="station"></select>
         <button type="button" onclick="loadTimetable()">시간표 조회</button>
       </div>
       <div class="divider"></div>
       <div class="column">
-        <label for="company">회사 코드:</label>
-        <select id="company" required>
-          <option value="S">S</option>
-          <option value="K">K</option>
-        </select>
+        <label>회사 코드:</label>
+        <!-- 회사코드 선택 버튼 그룹 -->
+        <div class="button-group">
+          <button type="button" class="group-btn" id="companyS" onclick="setCompany('S')">S</button>
+          <button type="button" class="group-btn" id="companyK" onclick="setCompany('K')">K</button>
+        </div>
         <label for="trainNumber">열차번호 (4자리):</label>
         <input type="text" id="trainNumber" pattern="\d{4}" maxlength="4" placeholder="예: 3393" required>
         <button type="button" onclick="loadTrainInfo()">편성정보 조회</button>
       </div>
     </div>
-    <!-- 시간표 결과 제목 및 안내 문구 -->
+    <!-- 결과 영역 -->
     <div class="timetable-title">
       <h2>시간표 결과</h2>
       <div class="timetable-notice">
@@ -400,7 +458,6 @@
     <div class="iframe-container-timetable" id="iframeContainerTimetable">
       <iframe id="timetableFrame"></iframe>
     </div>
-    <!-- 편성정보 결과 제목 및 안내 문구 -->
     <div class="traininfo-title">
       <h2>편성정보 결과</h2>
       <div class="traininfo-notice" id="traininfoNotice"></div>
