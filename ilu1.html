@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <!-- 손가락 확대/축소 금지 -->
+  <!-- 확대/축소 금지 -->
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>열차번호 및 편성정보 조회</title>
   <style>
@@ -103,7 +103,12 @@
       color: #fff;
       border-color: #007aff;
     }
-    /* 입력폼 영역: 두 영역을 좌우로 배치 */
+    /* 노선 및 회사코드 버튼에 동일하게 적용: 폰트 축소, 줄바꿈 방지 */
+    .line-btn {
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    /* 입력폼 영역: 두 영역 좌우 배치 */
     .row {
       display: flex;
       flex-wrap: nowrap;
@@ -128,8 +133,8 @@
       margin-bottom: 4px;
       color: #555;
     }
-    /* input, select, button 공통 스타일 */
-    input, select, button {
+    /* input, button 공통 스타일 */
+    input, button {
       padding: 8px 10px;
       font-size: 0.95rem;
       border: 1px solid #ccc;
@@ -137,7 +142,7 @@
       box-sizing: border-box;
       transition: border-color 0.2s;
     }
-    input:focus, select:focus {
+    input:focus {
       outline: none;
       border-color: #66afe9;
     }
@@ -151,7 +156,7 @@
     button:hover {
       background: #005bb5;
     }
-    /* 선택박스 높이 조정: 열차번호 입력과 동일하게 */
+    /* 선택박스 높이: 역명 선택과 열차번호 입력 동일 */
     #station, #trainNumber {
       height: 38px;
     }
@@ -370,10 +375,10 @@
     }
 
     window.onload = function() {
-      setLine("Seoul_Line_3");
+      setLine("Seoul_Line_3"); // 기본 노선: 일산선
       populateStations();
       loadTimetable();
-      setCompany("S");
+      setCompany("S"); // 기본 회사코드: S
       document.getElementById("timetableFrame").addEventListener("load", scrollTimetableTo30Percent);
       document.getElementById("trainNumber").addEventListener("keydown", function(e) {
         if (e.key === "Enter") {
@@ -417,7 +422,7 @@
       </div>
       <div class="date-info">
         날짜를 선택하세요<br>
-        편성번호는 특정 열차의 고유 번호<br>
+        편성번호는 특정열차의 고유번호<br>
         열차번호는 매일 변경
       </div>
     </div>
@@ -427,8 +432,8 @@
         <label>노선 선택:</label>
         <!-- 노선 선택 버튼 그룹 -->
         <div class="button-group">
-          <button type="button" class="group-btn" id="lineSeoul" onclick="setLine('Seoul_Line_3')">일산선</button>
-          <button type="button" class="group-btn" id="lineKorail" onclick="setLine('korail')">경의선</button>
+          <button type="button" class="group-btn line-btn" id="lineSeoul" onclick="setLine('Seoul_Line_3')">일산선</button>
+          <button type="button" class="group-btn line-btn" id="lineKorail" onclick="setLine('korail')">경의선</button>
         </div>
         <label for="station">역명 선택:</label>
         <select id="station"></select>
@@ -439,8 +444,8 @@
         <label>회사 코드:</label>
         <!-- 회사코드 선택 버튼 그룹 -->
         <div class="button-group">
-          <button type="button" class="group-btn" id="companyS" onclick="setCompany('S')">S</button>
-          <button type="button" class="group-btn" id="companyK" onclick="setCompany('K')">K</button>
+          <button type="button" class="group-btn line-btn" id="companyS" onclick="setCompany('S')">S</button>
+          <button type="button" class="group-btn line-btn" id="companyK" onclick="setCompany('K')">K</button>
         </div>
         <label for="trainNumber">열차번호 (4자리):</label>
         <input type="text" id="trainNumber" pattern="\d{4}" maxlength="4" placeholder="예: 3393" required>
