@@ -59,11 +59,19 @@
       width: 100%;
     }
     .date-input input {
-      padding: 8px 10px;
+      padding: 10px 12px;
       font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      border: 2px solid #007aff;
+      border-radius: 6px;
       margin-top: 5px;
+      background-color: #e7f1ff;
+      box-shadow: 0 2px 4px rgba(0,123,255,0.2);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .date-input input:focus {
+      outline: none;
+      border-color: #005bb5;
+      box-shadow: 0 2px 8px rgba(0,91,181,0.3);
     }
     .date-info {
       flex: 1;
@@ -87,10 +95,11 @@
       flex-direction: column;
       gap: 12px;
     }
+    /* 수직 구분선 추가 */
     .divider {
       width: 1px;
       background-color: #ccc;
-      margin: 5px 0;
+      /* 구분선의 높이는 컬럼의 전체 높이에 맞춰 자동으로 채움 */
     }
     label {
       font-weight: 600;
@@ -345,6 +354,8 @@
         </select>
         <button type="button" onclick="loadTimetable()">시간표 조회</button>
       </div>
+      <!-- 수직 구분선 -->
+      <div class="divider"></div>
       <div class="column">
         <label for="company">회사 코드:</label>
         <select id="company" required>
