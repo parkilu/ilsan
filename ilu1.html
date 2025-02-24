@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- 손가락 확대/축소 금지 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>열차번호 및 편성정보 조회</title>
   <style>
     /* 기본 스타일 */
@@ -58,7 +59,6 @@
       display: block;
       width: 100%;
     }
-    /* 날짜 입력 박스 강조 */
     .date-input input {
       padding: 10px 12px;
       font-size: 1rem;
@@ -81,10 +81,6 @@
       text-align: right;
       line-height: 1.4;
       padding-left: 10px;
-    }
-    /* no-wrap 스타일: 줄바꿈 없도록 */
-    .no-wrap {
-      white-space: nowrap;
     }
     /* 입력폼 영역: 두 영역을 항상 좌우로 배치 (반응형) */
     .row {
@@ -169,7 +165,7 @@
     }
     .iframe-container-timetable iframe {
       width: 100%;
-      height: 1200px;
+      height: 1200px; /* 고정된 내부 컨텐츠 높이 */
       border: none;
     }
     /* 편성정보 결과 영역 */
@@ -340,7 +336,7 @@
       </div>
       <div class="date-info">
         날짜를 선택하세요<br>
-        편성번호는 특정 열차의 고유 번호<br>
+        편성번호는 특정열차의 고유번호<br>
         열차번호는 매일 변경
       </div>
     </div>
