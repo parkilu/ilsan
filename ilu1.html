@@ -73,15 +73,16 @@
       line-height: 1.4;
       padding-left: 10px;
     }
-    /* 입력폼 영역 */
+    /* 입력폼 영역: 두 영역을 항상 좌우로 배치 (반응형) */
     .row {
       display: flex;
-      align-items: stretch;
+      flex-wrap: nowrap;
       gap: 15px;
       margin-bottom: 20px;
+      overflow-x: hidden;
     }
     .column {
-      flex: 1;
+      flex: 1 1 0;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -132,6 +133,17 @@
       text-align: right;
       line-height: 1.3;
     }
+    /* 움직이는 기차 이모티콘 */
+    .train-icon {
+      display: inline-block;
+      margin-right: 5px;
+      animation: moveTrain 2s linear infinite;
+    }
+    @keyframes moveTrain {
+      0% { transform: translateX(0); }
+      50% { transform: translateX(5px); }
+      100% { transform: translateX(0); }
+    }
     /* 시간표 결과 영역 */
     .iframe-container-timetable {
       width: 100%;
@@ -175,6 +187,20 @@
     }
   </style>
   <script>
+    // 소스보기를 막기 위한 스크립트 (완벽하지 않음)
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+    });
+    document.onkeydown = function(e) {
+      // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+      if (e.keyCode === 123 || 
+         (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) ||
+         (e.ctrlKey && e.keyCode === 85)) {
+        e.preventDefault();
+        return false;
+      }
+    };
+
     // 노선별 역 목록 데이터
     const stationsData = {
       "Seoul_Line_3": [
@@ -268,9 +294,9 @@
       // 편성정보 결과 영역으로 부드럽게 스크롤 이동
       document.getElementById('resultContainer').scrollIntoView({ behavior: 'smooth' });
       
-      // 편성정보 결과 제목 오른쪽의 "로딩중" 문구를 5초 후 제거
+      // 편성정보 결과 제목 오른쪽의 "로딩중" 문구와 기차 이모티콘을 5초 후 제거
       const traininfoNotice = document.getElementById("traininfoNotice");
-      traininfoNotice.textContent = "로딩중";
+      traininfoNotice.innerHTML = `<span class="train-icon">🚆</span>로딩중`;
       setTimeout(() => {
         traininfoNotice.textContent = "";
       }, 5000);
@@ -319,7 +345,6 @@
         </select>
         <button type="button" onclick="loadTimetable()">시간표 조회</button>
       </div>
-      <div class="divider"></div>
       <div class="column">
         <label for="company">회사 코드:</label>
         <select id="company" required>
