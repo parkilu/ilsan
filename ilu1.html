@@ -2,7 +2,6 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <!-- 손가락 확대/축소 금지 -->
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>열차번호 및 편성정보 조회</title>
   <style>
@@ -194,6 +193,25 @@
       left: 0;
       top: 0;
     }
+    /* 최상단 이동 버튼 */
+    .scroll-to-top {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      width: 50px;
+      height: 50px;
+      background: #007aff;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
   </style>
   <script>
     // 소스보기를 막기 위한 스크립트 (완벽하지 않음)
@@ -322,6 +340,11 @@
         }
       });
     };
+
+    // 최상단으로 이동하는 버튼 클릭 이벤트
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   </script>
 </head>
 <body>
@@ -336,7 +359,7 @@
       </div>
       <div class="date-info">
         날짜를 선택하세요<br>
-        편성번호는 특정열차의 고유번호<br>
+        편성번호는 특정 열차의 고유 번호<br>
         열차번호는 매일 변경
       </div>
     </div>
@@ -392,5 +415,7 @@
       </tr>
     </table>
   </div>
+  <!-- 최상단 이동 버튼 -->
+  <button class="scroll-to-top" onclick="scrollToTop()">↑</button>
 </body>
 </html>
